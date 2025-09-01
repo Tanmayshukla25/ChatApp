@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import Logo from "../assets/chatlogo.png";
+import Logo from "../assets/chatLogo.png";
 import UserImg from "../assets/Avtarimg.png";
 import { CiMenuKebab } from "react-icons/ci";
 import { FiUser, FiLogOut, FiSettings } from "react-icons/fi";
