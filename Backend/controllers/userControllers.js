@@ -104,6 +104,53 @@ export const getUserData = async (req, res) => {
 };
 
 
+export const updateUser = async (req, res) => {
+  console.log("Update User");
+  console.log(req.body);
+
+  try {
+    const { id } = req.params;
+
+ 
+    const imageUrl = req.file ? req.file.path : undefined;
+
+ 
+    let updateData = { ...req.body };
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No data provided in the request" });
+    }
+
+
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    }
+
+ 
+    if (imageUrl) {
+      updateData.image = imageUrl;
+      console.log("Updated Image:", imageUrl);
+    }
+
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password"); 
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    console.error("Error updating user:", err.message);
+    res
+      .status(500)
+      .json({ error: "User update failed", details: err.message });
+  }
+};
 export const singleUser=async(req,res)=>{
   try {
     const singleUsers= await User.findById(req.params.id);
