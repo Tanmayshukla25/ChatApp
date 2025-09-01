@@ -3,6 +3,9 @@ import { io } from "socket.io-client";
 import UserImg from "../assets/Avtarimg.png";
 import { LuSendHorizontal } from "react-icons/lu";
 import { RiGalleryLine } from "react-icons/ri";
+import { BsChatDots } from "react-icons/bs";
+import { FiUsers } from "react-icons/fi";
+import { MdWavingHand } from "react-icons/md";
 import UserContext from "../Pages/UserContext";
 
 const socket = io(import.meta.env.VITE_BACKEND_URL);
@@ -44,74 +47,155 @@ const ChatContainer = ({ selectedUser }) => {
     }
   };
 
+  const WelcomeScreen = () => (
+    <div className="flex items-center justify-center flex-1 bg-gradient-to-br from-[#1a1625] to-[#12101a]">
+      <div className="text-center max-w-md mx-auto px-6">
+        <div className="mb-6 relative">
+          <div className="w-24 h-24 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
+            <MdWavingHand className="text-white text-4xl animate-bounce" />
+          </div>
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full animate-pulse"></div>
+        </div>
+
+        <h2 className="text-3xl font-bold text-white mb-4">
+          Welcome back, {user?.name || "User"}!
+        </h2>
+
+        <p className="text-gray-300 text-lg mb-8 leading-relaxed">
+          Choose a conversation from your contacts to start chatting
+        </p>
+
+        <div className="space-y-4 mb-8">
+          <div className="flex items-center justify-center gap-3 text-gray-400">
+            <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
+              <BsChatDots className="text-blue-400" />
+            </div>
+            <span>Instant messaging</span>
+          </div>
+
+          <div className="flex items-center justify-center gap-3 mr-8 text-gray-400">
+            <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
+              <RiGalleryLine className="text-purple-400" />
+            </div>
+            <span>Share photos</span>
+          </div>
+
+          <div className="flex items-center justify-center gap-3 ml-6 text-gray-400">
+            <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
+              <FiUsers className="text-green-400" />
+            </div>
+            <span>Connect with friends</span>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full text-gray-300">
+            <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+            Select a contact to begin
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-[#12101a] text-white flex flex-col h-full">
       {selectedUser ? (
-        <div className="p-3 border-b border-gray-700 flex items-center gap-3">
-          <div>
-            <img
-              src={selectedUser.image || UserImg}
-              alt=""
-              className="w-[45px] aspect-[1/1] rounded-full"
-            />
-          </div>
-          <div>
-            <h2 className="font-bold">{selectedUser.name}</h2>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-center flex-1">
-          <p>Select a user to chat</p>
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto p-3">
-        {messages.map((item, index) => (
-          <div
-            key={index}
-            className={`mb-2 ${
-              item.sender === currentUserId ? "text-right" : "text-left"
-            }`}
-          >
-            <span
-              className={`inline-block px-3 py-2 rounded-lg ${
-                item.sender === currentUserId ? "bg-blue-600" : "bg-gray-700"
-              }`}
-            >
-              {item.text}
-            </span>
-            <span className="text-xs text-gray-300 block mt-1 text-right">
-              {new Date(item.timestamp || item.createdAt).toLocaleTimeString(
-                [],
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              )}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {selectedUser && (
-        <div className="p-3 border-t w-[50%] border-white fixed bottom-0 flex gap-2">
-          <input
-            className="flex-1 p-2 pl-3 w-full relative bg-gray-800 text-white rounded-2xl"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type a message..."
-          />
-          <RiGalleryLine className="absolute right-32 top-6" size={20} />
-          <button
-            onClick={sendMessage}
-            className="bg-blue-600 px-4  flex items-center gap-2 rounded-2xl"
-          >
-            <span> Send </span>{" "}
-            <div>
-              <LuSendHorizontal />
+        <>
+          {/* Header */}
+          <div className="p-4 border-b border-gray-700 flex items-center gap-3 bg-gradient-to-r from-[#1a1625] to-[#12101a]">
+            <div className="relative">
+              <img
+                src={selectedUser.image || UserImg}
+                alt=""
+                className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+              />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#12101a]"></div>
             </div>
-          </button>
-        </div>
+            <div>
+              <h2 className="font-bold text-lg">{selectedUser.name}</h2>
+              <p className="text-sm text-green-400">Online</p>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-[#12101a] to-[#0f0d16]">
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-gray-400">
+                  <BsChatDots className="text-4xl mx-auto mb-2 opacity-50" />
+                  <p>No messages yet. Start the conversation!</p>
+                </div>
+              </div>
+            ) : (
+              messages.map((item, index) => {
+                const isSender = item.sender === currentUserId;
+                return (
+                  <div
+                    key={index}
+                    className={`mb-4 flex ${
+                      isSender ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`px-4 py-3 rounded-2xl max-w-xs shadow-lg ${
+                        isSender
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                          : "bg-gray-700 text-gray-100"
+                      }`}
+                    >
+                      {item.text}
+                      <span className="text-xs text-gray-300 block mt-1 text-right">
+                        {new Date(
+                          item.timestamp || item.createdAt
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+       
+          <div className="p-4 border-t border-gray-700 fixed bottom-0 w-[50%] bg-[#1a1625]">
+            <div className="flex gap-3 items-center">
+              <div className="flex-1 relative">
+                <input
+                  className="w-full p-3 pl-4 pr-12 bg-gray-800 text-white rounded-2xl border border-gray-600 focus:border-blue-500 focus:outline-none transition-all duration-200"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Type a message..."
+                  onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                />
+                <input
+                  type="file"
+                  id="image"
+                  accept="image/png, image/jpeg"
+                  hidden
+                />
+                <label
+                  htmlFor="image"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer"
+                >
+                  <RiGalleryLine size={20} />
+                </label>
+              </div>
+              <button
+                onClick={sendMessage}
+                disabled={!text.trim()}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 flex items-center gap-2 rounded-2xl transition-all duration-200 shadow-lg"
+              >
+                <span className="font-medium">Send</span>
+                <LuSendHorizontal />
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <WelcomeScreen />
       )}
     </div>
   );

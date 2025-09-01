@@ -13,6 +13,7 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
 
   const [allUser, setALLUser] = useState([]);
   const { setUser } = useContext(UserContext);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     GetAllUsers();
@@ -46,10 +47,12 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
 
     console.log(`${action} clicked`);
   };
-
+  const filteredUsers = allUser.filter((item) =>
+    item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   return (
     <div
-      className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl  text-white ${
+      className={`bg-[#8185B2]/10 h-full p-5   text-white ${
         selectedUser ? "max-mad:hidden" : ""
       }`}
     >
@@ -95,14 +98,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                         <span>Edit Profile</span>
                       </button>
 
-                      <button
-                        onClick={() => handleMenuAction("settings")}
-                        className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150 flex items-center space-x-3"
-                      >
-                        <FiSettings className="w-4 h-4" />
-                        <span>Settings</span>
-                      </button>
-
                       <hr className="my-1 border-gray-600/50" />
 
                       <button
@@ -125,35 +120,42 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
             </div>
           </div>
 
-          <div className="flex items-center bg-[#282142] rounded-full  gap-2 py-3 px-4 mt-5 shadow-2xl">
+          <div className="flex items-center bg-[#282142] rounded-full gap-2 py-3 px-4 mt-5 shadow-2xl">
             <FiSearch />
             <input
               type="text"
               placeholder="Search User..."
-              className="bg-transparent border-none outline-none text-white text-xs placeholder-[#c8c8c8] flex-1 "
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)} // 👈 Update state
+              className="bg-transparent border-none outline-none text-white text-xs placeholder-[#c8c8c8] flex-1"
             />
           </div>
         </div>
-
         <div className="flex flex-col">
-          {allUser.map((item) => (
-            <div
-              key={item._id}
-              onClick={() => setSelectedUser(item)}
-              className={`relative flex items-center gap-2 p-2 pl-4 rounded-2xl cursor-pointer max-sm:text-sm ${
-                selectedUser?._id === item._id && "bg-[#282142]/50"
-              }`}
-            >
-              <img
-                src={item?.image || UserImg}
-                alt=""
-                className="w-[45px] aspect-[1/1] rounded-full"
-              />
-              <div className="flex flex-col leading-5">
-                <p>{item.name}</p>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((item) => (
+              <div
+                key={item._id}
+                onClick={() => setSelectedUser(item)}
+                className={`relative flex items-center gap-2 p-2 pl-4 rounded-2xl cursor-pointer max-sm:text-sm ${
+                  selectedUser?._id === item._id && "bg-[#282142]/50"
+                }`}
+              >
+                <img
+                  src={item?.image || UserImg}
+                  alt=""
+                  className="w-[45px] aspect-[1/1] rounded-full"
+                />
+                <div className="flex flex-col leading-5">
+                  <p>{item.name}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-gray-400 text-sm text-center py-4">
+              No users found
+            </p>
+          )}
         </div>
       </div>
     </div>
