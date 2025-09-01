@@ -15,6 +15,9 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
   const { user, setUser } = useContext(UserContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditProfile, setIsEditProfile] = useState(false);
+    const [isLogin, setIsLogin] = useState(false);
+      const [isLoading, setIsLoading] = useState(false);
+    const [failed, setFailed] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -103,12 +106,14 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("User updated successfully!");
+    
+      setIsLogin(true);
+      setFailed(false);
       setIsEditProfile(false);
       GetAllUsers();
     } catch (error) {
-      console.error("Error updating user:", error);
-      alert("Failed to update user");
+      setIsLogin(false);
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -290,6 +295,35 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                       />
                     </label>
                   </div>
+                   {isLogin && (
+                              <div className="flex items-center justify-center mb-6 animate-bounce">
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-center py-3 px-6 rounded-2xl text-white shadow-lg">
+                                  <div className="flex items-center gap-3">
+                                    <SiTicktick className="text-xl" />
+                                    <h1 className="font-semibold">Login Successful!</h1>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                  
+                            {/* Error notification */}
+                            {failed && (
+                              <div className="flex items-center justify-center mb-6">
+                                <div className="bg-gradient-to-r from-red-500 to-pink-600 text-center py-3 px-6 rounded-2xl text-white shadow-lg">
+                                  <h1 className="font-semibold">Login Failed</h1>
+                                </div>
+                              </div>
+                            )}
+                  
+                            {/* Loading indicator */}
+                            {isLoading && (
+                              <div className="flex items-center justify-center mb-6">
+                                <div className="flex items-center space-x-3 bg-blue-50 py-3 px-6 rounded-2xl">
+                                  <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="text-blue-700 font-medium">Signing you in...</span>
+                                </div>
+                              </div>
+                            )}
                 </div>
 
          

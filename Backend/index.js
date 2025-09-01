@@ -11,13 +11,13 @@ import { socketHandler } from "./controllers/socketController.js";
 const app = express();
 const port = process.env.PORT;
 
-const allowedOrigins = [process.env.DEPLOYED_FRONTEND_URL];
+const allowedOrigins = process.env.DEPLOYED_FRONTEND_URLS.split(",");
 const localhostRegex = /^(https:\/\/localhost:\d+|http:\/\/localhost:\d+)$/;
 
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin) || localhostRegex.test(origin)) {
-      return callback(null, true);
+      callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
@@ -25,7 +25,6 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
-
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
