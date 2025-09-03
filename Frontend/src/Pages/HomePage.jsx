@@ -5,6 +5,7 @@ import RightSideBar from '../components/RightSideBar'
 
 const HomePage = () => {
   const [selectedUser, setSelectedUser] = useState(null)
+  const [messages, setMessages] = useState([]) // ✅ Lifted up state
 
   return (
     <div className='border w-full h-screen sm:px-[8%] sm:py-[2%]'>
@@ -15,11 +16,21 @@ const HomePage = () => {
             : "md:grid-cols-2"
         }`}
       >
+        {/* Pass selectedUser and setter */}
         <LeftSideBar selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
-        <ChatContainer selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
-        
-        
-        {selectedUser && <RightSideBar selectedUser={selectedUser} />}
+
+        {/* Pass messages and setMessages to ChatContainer */}
+        <ChatContainer
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+          messages={messages}
+          setMessages={setMessages}
+        />
+
+        {/* Show RightSideBar only if a user is selected */}
+        {selectedUser && (
+          <RightSideBar selectedUser={selectedUser} files={messages} />
+        )}
       </div>
     </div>
   )
