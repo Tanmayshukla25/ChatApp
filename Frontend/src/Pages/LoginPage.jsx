@@ -218,26 +218,9 @@ const {fetchData} = useContext(UserContext);
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="mt-8 mb-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
-            </div>
-          </div>
+          
 
-          {/* Google Sign In */}
-          <div className="flex justify-center mb-6">
-            <Link
-              to={`${import.meta.env.VITE_BACKEND_URL}/auth/google`}
-              className="flex items-center justify-center w-14 h-14 bg-white border-2 border-gray-200 rounded-2xl hover:border-gray-300 hover:shadow-lg transition-all duration-300 transform hover:scale-110 hover:rotate-3 group"
-              title="Sign in with Google"
-            >
-              <FcGoogle className="text-2xl group-hover:scale-110 transition-transform duration-200" />
-            </Link>
-          </div>
+      
 
           {/* Register Link */}
           <div className="text-center">
