@@ -7,7 +7,7 @@ import { BsChatDots } from "react-icons/bs";
 import { FiUsers } from "react-icons/fi";
 import { MdWavingHand } from "react-icons/md";
 import UserContext from "../Pages/UserContext";
-
+import { Link } from "react-router-dom";
 const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 const ChatContainer = ({ selectedUser }) => {
@@ -34,6 +34,40 @@ const ChatContainer = ({ selectedUser }) => {
       socket.off("receiveMessage");
     };
   }, [selectedUser]);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedUser) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/socket/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.url) {
+        socket.emit("sendMessage", {
+          sender: currentUserId,
+          receiver: selectedUser._id,
+          text: "", 
+          fileUrl: data.url,
+          fileType: data.mimetype,
+          fileName: data.filename,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      console.error("File upload failed", err);
+    }
+  };
 
   const sendMessage = () => {
     if (text.trim() && selectedUser) {
@@ -102,14 +136,21 @@ const ChatContainer = ({ selectedUser }) => {
     <div className="bg-[#12101a] text-white flex flex-col h-full">
       {selectedUser ? (
         <>
-          {/* Header */}
+       
           <div className="p-4 border-b border-gray-700 flex items-center gap-3 bg-gradient-to-r from-[#1a1625] to-[#12101a]">
             <div className="relative">
-              <img
-                src={selectedUser.image || UserImg}
-                alt=""
-                className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
-              />
+              {selectedUser?.image ? (
+                <img
+                  src={selectedUser.image}
+                  alt={selectedUser.name}
+                  className="w-[45px] aspect-[1/1] rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-[45px] h-[45px] rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                  {selectedUser?.name?.charAt(0)?.toUpperCase()}
+                </div>
+              )}
+
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#12101a]"></div>
             </div>
             <div>
@@ -143,7 +184,29 @@ const ChatContainer = ({ selectedUser }) => {
                           : "bg-gray-700 text-gray-100"
                       }`}
                     >
-                      {item.text}
+                
+                      {item.fileUrl ? (
+                        item.fileType?.startsWith("image/") ? (
+                          <img
+                            src={item.fileUrl}
+                            alt={item.fileName}
+                            className="max-w-[200px] rounded-lg"
+                          />
+                        ) : (
+                          <Link
+                            to={item.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline text-blue-400"
+                          >
+                            📄 {item.fileName || "Download File"}
+                          </Link>
+                        )
+                      ) : (
+                        <span>{item.text}</span>
+                      )}
+
+                   
                       <span className="text-xs text-gray-300 block mt-1 text-right">
                         {new Date(
                           item.timestamp || item.createdAt
@@ -159,7 +222,6 @@ const ChatContainer = ({ selectedUser }) => {
             )}
           </div>
 
-       
           <div className="p-4 border-t border-gray-700 fixed bottom-0 w-[50%] bg-[#1a1625]">
             <div className="flex gap-3 items-center">
               <div className="flex-1 relative">
@@ -172,12 +234,14 @@ const ChatContainer = ({ selectedUser }) => {
                 />
                 <input
                   type="file"
-                  id="image"
-                  accept="image/png, image/jpeg"
+                  id="chatFile"
+                  accept="image/png, image/jpeg, application/pdf, .docx, .txt"
                   hidden
+                  onChange={handleFileUpload}
                 />
+
                 <label
-                  htmlFor="image"
+                  htmlFor="chatFile"
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer"
                 >
                   <RiGalleryLine size={20} />

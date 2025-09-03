@@ -3,6 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import connectToDB from "./config/db.js";
 import userRouter from "./routes/userRouter.js";
+import socketRouter from "./routes/socketRoutes.js"; 
 import cookieParser from "cookie-parser";
 import http from "http";                
 import { Server } from "socket.io";     
@@ -11,7 +12,7 @@ import { socketHandler } from "./controllers/socketController.js";
 const app = express();
 const port = process.env.PORT;
 
-const allowedOrigins = [process.env.DEPLOYED_FRONTEND_URL];
+const allowedOrigins = [process.env.FRONTEND_URL];
 const localhostRegex = /^(https:\/\/localhost:\d+|http:\/\/localhost:\d+)$/;
 
 const corsOptions = {
@@ -32,6 +33,7 @@ app.use(cookieParser());
 
 
 app.use("/user", userRouter);
+app.use("/socket", socketRouter); 
 
 
 connectToDB();

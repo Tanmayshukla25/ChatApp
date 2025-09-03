@@ -2,11 +2,17 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
-    sender: String,
-    receiver: String,
-    text: String,
+    sender: { type: String, required: true },
+    receiver: { type: String, required: true },
+
+    text: { type: String },
+
+    fileUrl: { type: String },
+    fileType: { type: String },
+    fileName: { type: String },
   },
-  { timestamps: true, default: Date.now }
+  { timestamps: true }
 );
+
 const Message = mongoose.model("Message", messageSchema);
 export default Message;

@@ -15,9 +15,9 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
   const { user, setUser } = useContext(UserContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditProfile, setIsEditProfile] = useState(false);
-    const [isLogin, setIsLogin] = useState(false);
-      const [isLoading, setIsLoading] = useState(false);
-    const [failed, setFailed] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -106,7 +106,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-    
       setIsLogin(true);
       setFailed(false);
       setIsEditProfile(false);
@@ -127,7 +126,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
 
   return (
     <>
-   
       <style>
         {`
           @keyframes scale-up-center {
@@ -153,7 +151,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
         }`}
       >
         <div className="w-full p-4 rounded-lg shadow-lg">
-    
           <div className="pb-5">
             <div className="flex justify-between items-center">
               <div className="flex justify-between items-center gap-2">
@@ -169,7 +166,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                 </div>
               </div>
 
-          
               <div className="relative">
                 <button
                   onClick={toggleDropdown}
@@ -231,7 +227,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
               </div>
             </div>
 
-        
             <div className="flex items-center bg-[#282142] rounded-full gap-2 py-3 px-4 mt-5 shadow-2xl">
               <FiSearch />
               <input
@@ -244,11 +239,9 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
             </div>
           </div>
 
-       
           {isEditProfile ? (
             <div className="fixed inset-0 bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white/95 backdrop-blur-sm shadow-2xl border border-white/20 p-8 rounded-3xl space-y-6 w-full max-w-md max-h-[90vh] overflow-y-auto hide-scrollbar scale-up-center-normal relative">
-            
+              <div className="bg-white/95 backdrop-blur-sm shadow-2xl border border-white/20 p-8 rounded-3xl space-y-6 w-full max-w-md max-h-[90vh] overflow-y-auto hide-scrollbar scale-up-center-normal relative">
                 <button
                   onClick={() => setIsEditProfile(false)}
                   className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -256,7 +249,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                   <X className="w-5 h-5 text-gray-600" />
                 </button>
 
-              
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-4 shadow-lg">
                     <UserCheck className="w-8 h-8 text-white" />
@@ -269,7 +261,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                   </p>
                 </div>
 
-            
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 border-4 border-white shadow-lg overflow-hidden">
@@ -295,41 +286,40 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                       />
                     </label>
                   </div>
-                   {isLogin && (
-                              <div className="flex items-center justify-center mb-6 animate-bounce">
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-center py-3 px-6 rounded-2xl text-white shadow-lg">
-                                  <div className="flex items-center gap-3">
-                                    <SiTicktick className="text-xl" />
-                                    <h1 className="font-semibold">Login Successful!</h1>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                  
-                            {/* Error notification */}
-                            {failed && (
-                              <div className="flex items-center justify-center mb-6">
-                                <div className="bg-gradient-to-r from-red-500 to-pink-600 text-center py-3 px-6 rounded-2xl text-white shadow-lg">
-                                  <h1 className="font-semibold">Login Failed</h1>
-                                </div>
-                              </div>
-                            )}
-                  
-                            {/* Loading indicator */}
-                            {isLoading && (
-                              <div className="flex items-center justify-center mb-6">
-                                <div className="flex items-center space-x-3 bg-blue-50 py-3 px-6 rounded-2xl">
-                                  <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                  <span className="text-blue-700 font-medium">Signing you in...</span>
-                                </div>
-                              </div>
-                            )}
+                  {isLogin && (
+                    <div className="flex items-center justify-center mb-6 animate-bounce">
+                      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-center py-3 px-6 rounded-2xl text-white shadow-lg">
+                        <div className="flex items-center gap-3">
+                          <SiTicktick className="text-xl" />
+                          <h1 className="font-semibold">Login Successful!</h1>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                
+                  {failed && (
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="bg-gradient-to-r from-red-500 to-pink-600 text-center py-3 px-6 rounded-2xl text-white shadow-lg">
+                        <h1 className="font-semibold">Login Failed</h1>
+                      </div>
+                    </div>
+                  )}
+
+                  {isLoading && (
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="flex items-center space-x-3 bg-blue-50 py-3 px-6 rounded-2xl">
+                        <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-blue-700 font-medium">
+                          Signing you in...
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-         
                 <div className="w-full max-w-lg mx-auto">
                   <form onSubmit={handleSubmit} className="space-y-5">
-                 
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <User className="h-5 w-5 text-gray-400" />
@@ -375,7 +365,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                       />
                     </div>
 
-                 
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Lock className="h-5 w-5 text-gray-400" />
@@ -390,7 +379,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                       />
                     </div>
 
-                 
                     <div className="flex gap-3 pt-4">
                       <button
                         type="button"
@@ -419,7 +407,6 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
               </div>
             </div>
           ) : (
-           
             <div className="flex flex-col">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((item) => (
@@ -430,11 +417,18 @@ const LeftSideBar = ({ selectedUser, setSelectedUser }) => {
                       selectedUser?._id === item._id && "bg-[#282142]/50"
                     }`}
                   >
-                    <img
-                      src={item?.image || UserImg}
-                      alt=""
-                      className="w-[45px] aspect-[1/1] rounded-full"
-                    />
+                    {item?.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-[45px] aspect-[1/1] rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-[45px] h-[45px] rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                        {item?.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                    )}
+
                     <div className="flex flex-col leading-5">
                       <p>{item.name}</p>
                     </div>
