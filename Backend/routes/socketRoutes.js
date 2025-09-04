@@ -1,6 +1,6 @@
 import express from "express";
 import Conversation from "../models/messageSchema.js";
-import { uploadMessageFile } from "../Middleware/uploadMessageFile.js";
+import { uploadMessageFile } from "../MiddleWare/uploadMessageFile.js";
 
 const router = express.Router();
 
