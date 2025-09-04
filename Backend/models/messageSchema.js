@@ -1,12 +1,9 @@
 import mongoose from "mongoose";
 
-const messageSchema = new mongoose.Schema(
+const messageSubSchema = new mongoose.Schema(
   {
     sender: { type: String, required: true },
-    receiver: { type: String, required: true },
-
     text: { type: String },
-
     fileUrl: { type: String },
     fileType: { type: String },
     fileName: { type: String },
@@ -14,5 +11,13 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Message = mongoose.model("Message", messageSchema);
-export default Message;
+const conversationSchema = new mongoose.Schema(
+  {
+    participants: [{ type: String, required: true }], 
+    messages: [messageSubSchema], 
+  },
+  { timestamps: true }
+);
+
+const Conversation = mongoose.model("Conversation", conversationSchema);
+export default Conversation;

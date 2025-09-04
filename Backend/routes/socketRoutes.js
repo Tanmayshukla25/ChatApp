@@ -1,12 +1,9 @@
 import express from "express";
-import { uploadMessageFile } from "../MiddleWare/uploadMessageFile.js";
+import Conversation from "../models/messageSchema.js";
+import { uploadMessageFile } from "../Middleware/uploadMessageFile.js";
 
 const router = express.Router();
 
-
-router.get("/", (req, res) => {
-  res.send("Socket route working ✅");
-});
 
 router.post("/upload", uploadMessageFile.single("file"), (req, res) => {
   try {
@@ -14,14 +11,34 @@ router.post("/upload", uploadMessageFile.single("file"), (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    return res.json({
-      url: req.file.path,
-      filename: req.file.filename,
+    res.json({
+      url: req.file.path, 
       mimetype: req.file.mimetype,
+      filename: req.file.originalname,
     });
   } catch (err) {
-    console.error("Upload error:", err);
-    res.status(500).json({ message: "Something went wrong" });
+    console.error("❌ Upload error:", err);
+    res.status(500).json({ message: "File upload failed" });
+  }
+});
+
+
+router.get("/:sender/:receiver", async (req, res) => {
+  try {
+    const { sender, receiver } = req.params;
+
+    const conversation = await Conversation.findOne({
+      participants: { $all: [sender, receiver] },
+    });
+
+    if (!conversation) {
+      return res.json([]);
+    }
+
+    res.json(conversation.messages);
+  } catch (err) {
+    console.error("❌ Error fetching messages:", err);
+    res.status(500).json({ message: "Error fetching messages" });
   }
 });
 

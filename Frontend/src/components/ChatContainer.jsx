@@ -7,6 +7,7 @@ import { FiUsers } from "react-icons/fi";
 import { MdWavingHand } from "react-icons/md";
 import UserContext from "../Pages/UserContext";
 import { Link } from "react-router-dom";
+import instance from "../Pages/axiosConfig";
 
 const socket = io(import.meta.env.VITE_BACKEND_URL);
 
@@ -16,18 +17,44 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
 
   const currentUserId = user?._id;
 
-  // Join room + listen for messages
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedUser || !currentUserId) return;
+
+      try {
+        const res = await instance.get(
+          `/socket/${currentUserId}/${selectedUser._id}`
+        );
+
+        if (Array.isArray(res.data)) {
+          setMessages(res.data);
+        } else if (res.data.messages) {
+          setMessages(res.data.messages);
+        } else {
+          setMessages([]);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching messages:", err);
+        setMessages([]);
+      }
+    };
+
+    fetchMessages();
+  }, [selectedUser, currentUserId, setMessages]);
+
   useEffect(() => {
     if (!currentUserId) return;
+
     socket.emit("join", currentUserId);
 
-    socket.on("receiveMessage", (item) => {
+    socket.on("receiveMessage", (msg) => {
+      console.log("📩 Socket received:", msg);
+
       if (
-        (item.sender === selectedUser?._id &&
-          item.receiver === currentUserId) ||
-        (item.receiver === selectedUser?._id && item.sender === currentUserId)
+        msg.sender === selectedUser?._id ||
+        msg.receiver === selectedUser?._id
       ) {
-        setMessages((prev) => [...prev, item]);
+        setMessages((prev) => [...prev, msg]);
       }
     });
 
@@ -36,57 +63,56 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
     };
   }, [selectedUser, currentUserId, setMessages]);
 
-  // File Upload
- const handleFileUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file || !selectedUser) return;
+  // ✅ File Upload
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedUser) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-  try {
-    const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/socket/upload`,
-      { method: "POST", body: formData }
-    );
+    try {
+      const res = await instance.post("/socket/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    const data = await res.json();
+      if (res.data.url) {
+        const fileMsg = {
+          sender: currentUserId,
+          receiver: selectedUser._id,
+          text: "",
+          fileUrl: res.data.url,
+          fileType: res.data.mimetype,
+          fileName: res.data.filename,
+          createdAt: new Date().toISOString(),
+        };
 
-    if (data.url) {
-      const fileMsg = {
+        socket.emit("sendMessage", fileMsg);
+
+        setMessages((prev) => [...prev, fileMsg]);
+      }
+    } catch (err) {
+      console.error("❌ File upload failed:", err);
+    }
+  };
+
+  const sendMessage = () => {
+    if (text.trim() && selectedUser) {
+      const msg = {
         sender: currentUserId,
         receiver: selectedUser._id,
-        text: "",
-        fileUrl: data.url,
-        fileType: data.mimetype,
-        fileName: data.filename,
-        timestamp: new Date().toISOString(),
+        text,
+        createdAt: new Date().toISOString(),
       };
 
-      socket.emit("sendMessage", fileMsg);
-      // ❌ remove: setMessages([...fileMsg])
+      socket.emit("sendMessage", msg);
+
+      setMessages((prev) => [...prev, msg]);
+
+      setText("");
     }
-  } catch (err) {
-    console.error("File upload failed", err);
-  }
-};
+  };
 
-  // Send text message
-  const sendMessage = () => {
-  if (text.trim() && selectedUser) {
-    const msg = {
-      sender: currentUserId,
-      receiver: selectedUser._id,
-      text,
-      timestamp: new Date().toISOString(),
-    };
-
-    socket.emit("sendMessage", msg);
-    setText(""); // ✅ Only clear input
-  }
-};
-
-  // Welcome Screen
   const WelcomeScreen = () => (
     <div className="flex items-center justify-center flex-1 bg-gradient-to-br from-[#1a1625] to-[#12101a]">
       <div className="text-center max-w-md mx-auto px-6">
@@ -96,15 +122,12 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
           </div>
           <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full animate-pulse"></div>
         </div>
-
         <h2 className="text-3xl font-bold text-white mb-4">
           Welcome back, {user?.name || "User"}!
         </h2>
-
         <p className="text-gray-300 text-lg mb-8 leading-relaxed">
           Choose a conversation from your contacts to start chatting
         </p>
-
         <div className="space-y-4 mb-8">
           <div className="flex items-center justify-center gap-3 text-gray-400">
             <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
@@ -112,14 +135,12 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
             </div>
             <span>Instant messaging</span>
           </div>
-
           <div className="flex items-center justify-center gap-3 mr-8 text-gray-400">
             <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
               <RiGalleryLine className="text-purple-400" />
             </div>
             <span>Share photos & docs</span>
           </div>
-
           <div className="flex items-center justify-center gap-3 ml-6 text-gray-400">
             <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
               <FiUsers className="text-green-400" />
@@ -127,7 +148,6 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
             <span>Connect with friends</span>
           </div>
         </div>
-
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full text-gray-300">
             <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
@@ -142,7 +162,6 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
     <div className="bg-[#12101a] text-white flex flex-col h-full">
       {selectedUser ? (
         <>
-          {/* Header */}
           <div className="p-4 border-b border-gray-700 flex items-center gap-3 bg-gradient-to-r from-[#1a1625] to-[#12101a]">
             <div className="relative">
               {selectedUser?.image ? (
@@ -156,7 +175,6 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
                   {selectedUser?.name?.charAt(0)?.toUpperCase()}
                 </div>
               )}
-
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#12101a]"></div>
             </div>
             <div>
@@ -165,69 +183,64 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
             </div>
           </div>
 
-          {/* Messages */}
-         <div className="flex-1 p-4 bg-gradient-to-b from-[#12101a] to-[#0f0d16] overflow-y-auto h-full">
-  {messages.length === 0 ? (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center text-gray-400">
-        <BsChatDots className="text-4xl mx-auto mb-2 opacity-50" />
-        <p>No messages yet. Start the conversation!</p>
-      </div>
-    </div>
-  ) : (
-    messages.map((item, index) => {
-      const isSender = item.sender === currentUserId;
-      return (
-        <div
-          key={index}
-          className={`mb-4 flex ${isSender ? "justify-end" : "justify-start"}`}
-        >
-          <div
-            className={`px-4 py-3 rounded-2xl max-w-xs shadow-lg overflow-hidden ${
-              isSender
-                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                : "bg-gray-700 text-gray-100"
-            }`}
-          >
-            {item.fileUrl ? (
-              item.fileType?.startsWith("image/") ? (
-                <img
-                  src={item.fileUrl}
-                  alt={item.fileName}
-                  className="max-w-[200px] rounded-lg"
-                />
-              ) : (
-                <Link
-                  to={item.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline text-blue-400"
-                >
-                  📄 {item.fileName || "Download File"}
-                </Link>
-              )
+          <div className="flex-1 p-4 bg-gradient-to-b from-[#12101a] to-[#0f0d16] overflow-y-auto hide-scrollbar h-full">
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-gray-400">
+                  <BsChatDots className="text-4xl mx-auto mb-2 opacity-50" />
+                  <p>No messages yet. Start the conversation!</p>
+                </div>
+              </div>
             ) : (
-              <span>{item.text}</span>
+              messages.map((item, index) => {
+                const isSender = item.sender === currentUserId;
+                return (
+                  <div
+                    key={item._id || index}
+                    className={`mb-4 flex ${
+                      isSender ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`px-4 py-3 rounded-2xl max-w-xs shadow-xl transition-all duration-300 hover:shadow-2xl ${
+                        isSender
+                          ? "bg-gradient-to-r from-pink-600 via-purple-500 to-indigo-500 text-white ml-auto transform hover:scale-[1.02]"
+                          : "bg-gray-600 text-white mr-auto border border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      {item.fileUrl ? (
+                        item.fileType?.startsWith("image/") ? (
+                          <img
+                            src={item.fileUrl}
+                            alt={item.fileName}
+                            className="max-w-[100px] rounded-lg"
+                          />
+                        ) : (
+                          <Link
+                            to={item.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline text-blue-400"
+                          >
+                            📄 {item.fileName || "Download File"}
+                          </Link>
+                        )
+                      ) : (
+                        <span>{item.text}</span>
+                      )}
+                      <span className="text-xs text-gray-300 block mt-1 text-right">
+                        {new Date(item.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
             )}
-
-            <span className="text-xs text-gray-300 block mt-1 text-right">
-              {new Date(item.timestamp || item.createdAt).toLocaleTimeString(
-                [],
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              )}
-            </span>
           </div>
-        </div>
-      );
-    })
-  )}
-</div>
 
-
-          {/* Input Box */}
           <div className="p-4 border-t border-gray-700 fixed bottom-0 w-[50%] bg-[#1a1625]">
             <div className="flex gap-3 items-center">
               <div className="flex-1 relative">
