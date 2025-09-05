@@ -15,72 +15,75 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
   const [text, setText] = useState("");
   const { user } = useContext(UserContext);
   const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null); // Add ref for the messages container
-
   const currentUserId = user?._id;
 
-  // Auto-scroll to the latest message
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ 
-      behavior: "smooth",
-      block: "end"
-    });
-  };
+  // 🔹 Reusable fetch function
+  const fetchMessages = async () => {
+    if (!selectedUser || !currentUserId) return;
+    try {
+      const res = await instance.get(`/socket/${currentUserId}/${selectedUser._id}`);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedUser || !currentUserId) return;
-
-      try {
-        const res = await instance.get(
-          `/socket/${currentUserId}/${selectedUser._id}`
-        );
-
-        if (Array.isArray(res.data)) {
-          setMessages(res.data);
-        } else if (res.data.messages) {
-          setMessages(res.data.messages);
-        } else {
-          setMessages([]);
-        }
-      } catch (err) {
-        console.error("❌ Error fetching messages:", err);
+      if (Array.isArray(res.data)) {
+        setMessages(res.data);
+      } else if (res.data.messages) {
+        setMessages(res.data.messages);
+      } else {
         setMessages([]);
       }
-    };
+    } catch (err) {
+      console.error("❌ Error fetching messages:", err);
+      setMessages([]);
+    }
+  };
 
+  // Scroll to bottom on new message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
+
+  // Fetch messages jab user select kare
+  useEffect(() => {
     fetchMessages();
-  }, [selectedUser, currentUserId, setMessages]);
+  }, [selectedUser, currentUserId]);
 
-  // Set up socket connection and message listener
+  // Setup socket listeners and join room
   useEffect(() => {
     if (!currentUserId) return;
 
     socket.emit("join", currentUserId);
 
-    const handleReceiveMessage = (msg) => {
-      if (
-        (msg.sender === selectedUser?._id ||
-          msg.receiver === selectedUser?._id) &&
-        !messages.some((m) => m._id === msg._id)
-      ) {
-        setMessages((prev) => [...prev, msg]);
-      }
+    const handleReceiveMessage = () => {
+      // 🟢 Jab bhi koi message aaye → backend se fresh data fetch
+      fetchMessages();
     };
 
     socket.on("receiveMessage", handleReceiveMessage);
 
-    // Cleanup listener on unmount or dependency change
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
     };
-  }, [currentUserId, selectedUser?._id, messages, setMessages]);
+  }, [currentUserId, selectedUser?._id]);
 
+  // Send text message
+  const sendMessage = async () => {
+    if (text.trim() && selectedUser) {
+      const msg = {
+        sender: currentUserId,
+        receiver: selectedUser._id,
+        text,
+        createdAt: new Date().toISOString(),
+      };
+
+      socket.emit("sendMessage", msg);
+      setMessages((prev) => [...prev, msg]);
+      setText("");
+
+      // 🟢 Turant fresh messages le aao
+      await fetchMessages();
+    }
+  };
+
+  // Handle file upload message
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !selectedUser) return;
@@ -106,24 +109,12 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
 
         socket.emit("sendMessage", fileMsg);
         setMessages((prev) => [...prev, fileMsg]);
+
+        // 🟢 File send karne ke baad bhi refresh
+        await fetchMessages();
       }
     } catch (err) {
       console.error("❌ File upload failed:", err);
-    }
-  };
-
-  const sendMessage = () => {
-    if (text.trim() && selectedUser) {
-      const msg = {
-        sender: currentUserId,
-        receiver: selectedUser._id,
-        text,
-        createdAt: new Date().toISOString(),
-      };
-
-      socket.emit("sendMessage", msg);
-      setMessages((prev) => [...prev, msg]);
-      setText("");
     }
   };
 
@@ -176,6 +167,7 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
     <div className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-gray-200 flex flex-col h-full shadow-xl overflow-hidden relative font-sans">
       {selectedUser ? (
         <>
+          {/* Header */}
           <div className="p-4 border-b border-gray-700 flex items-center gap-3 bg-gradient-to-r from-[#1a1625] to-[#12101a] shadow-inner">
             <div className="relative">
               {selectedUser?.image ? (
@@ -194,28 +186,21 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
               </div>
             </div>
             <div>
-              <h2 className="font-bold text-lg text-white">
-                {selectedUser.name}
-              </h2>
+              <h2 className="font-bold text-lg text-white">{selectedUser.name}</h2>
               <p className="text-green-400 text-sm font-semibold">Online</p>
             </div>
           </div>
 
-          <div 
-            ref={messagesContainerRef}
+          {/* Messages */}
+          <div
             className="flex-1 p-4 pb-34 bg-gradient-to-b from-[#12101a] to-[#0f0d16] overflow-y-auto custom-scrollbar hide-scrollbar"
-            style={{ 
-              maxHeight: "calc(100% - 140px)", // Adjust based on header and input heights
-              overflowY: "auto"
-            }}
+            style={{ maxHeight: "calc(100% - 140px)", overflowY: "auto" }}
           >
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-400">
                 <div className="text-center">
                   <BsChatDots className="text-5xl mx-auto mb-3 opacity-60" />
-                  <p className="text-lg">
-                    No messages yet. Start the conversation!
-                  </p>
+                  <p className="text-lg">No messages yet. Start the conversation!</p>
                 </div>
               </div>
             ) : (
@@ -225,9 +210,7 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
                   return (
                     <div
                       key={item._id || index}
-                      className={`mb-4 flex ${
-                        isSender ? "justify-end" : "justify-start"
-                      }`}
+                      className={`mb-4 flex ${isSender ? "justify-end" : "justify-start"}`}
                     >
                       <div
                         className={`px-3 py-2 rounded-2xl max-w-xs shadow-lg transition-transform duration-300 hover:shadow-xl ${
@@ -271,6 +254,7 @@ const ChatContainer = ({ selectedUser, messages, setMessages }) => {
             )}
           </div>
 
+          {/* Input box */}
           <div className="absolute bottom-15 left-0 right-0 p-4 border-t border-white/20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 backdrop-blur-md shadow-inner flex gap-4 items-center">
             <div className="flex flex-1 relative">
               <input
