@@ -1,7 +1,7 @@
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-
+import nodemailer from "nodemailer"
 export const userRegister = async (req, res) => {
   try {
     const { name, email, password, PhoneNumber } = req.body;
@@ -22,6 +22,38 @@ export const userRegister = async (req, res) => {
       PhoneNumber,
     });
     await newUser.save();
+
+    let auth = nodemailer.createTransport({
+      service: "gmail",
+      secure: false,
+      port: 587,
+      auth: {
+        user: "tanmayshukla252@gmail.com",
+        pass: "tjkt aqvd lpgt wxpd",
+      },
+    });
+
+    const reciver = {
+      from: "tanmayshukla252@gmail.com",
+      to: email,
+      subject: "🎉 Welcome to Chat-App – Aapka Apna Chat-App! 🚀",
+      text:
+        "Hi " +
+        name +
+        ",\n\n" +
+        "Welcome to *Chat-App*! 💬✨\n\n" +
+        "Ab chatting hogi aur bhi easy, fast aur secure. Aap apne doston se connect kar sakte ho, photos & files share kar sakte ho, aur real-time masti kar sakte ho. 🔥\n\n" +
+        "👉 Get started now aur banaiye apni khud ki chat duniya!\n\n" +
+        "Aapka apna dostana chat partner,\n" +
+        "Team Chat-App 🚀",
+    };
+
+    auth.sendMail(reciver, (error, emailresponse) => {
+      if (error) {
+        return console.log("Error:", error);
+      }
+      console.log("Message sent: %s", emailresponse.messageId);
+    });
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error(error);
@@ -96,13 +128,12 @@ export const getUserData = async (req, res) => {
     res.status(200).json(allUsers);
   } catch (error) {
     console.error("Error fetching users:", error.message);
-    res.status(500).json({ 
-      error: "Failed to fetch users", 
-      details: error.message 
+    res.status(500).json({
+      error: "Failed to fetch users",
+      details: error.message,
     });
   }
 };
-
 
 export const updateUser = async (req, res) => {
   console.log("Update User");
@@ -111,33 +142,30 @@ export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
 
- 
     const imageUrl = req.file ? req.file.path : undefined;
 
- 
     let updateData = { ...req.body };
 
     if (!updateData || Object.keys(updateData).length === 0) {
-      return res.status(400).json({ message: "No data provided in the request" });
+      return res
+        .status(400)
+        .json({ message: "No data provided in the request" });
     }
-
 
     if (updateData.password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(updateData.password, salt);
     }
 
- 
     if (imageUrl) {
       updateData.image = imageUrl;
       console.log("Updated Image:", imageUrl);
     }
 
-
     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
-    }).select("-password"); 
+    }).select("-password");
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -146,20 +174,17 @@ export const updateUser = async (req, res) => {
     res.status(200).json(updatedUser);
   } catch (err) {
     console.error("Error updating user:", err.message);
-    res
-      .status(500)
-      .json({ error: "User update failed", details: err.message });
+    res.status(500).json({ error: "User update failed", details: err.message });
   }
 };
-export const singleUser=async(req,res)=>{
+export const singleUser = async (req, res) => {
   try {
-    const singleUsers= await User.findById(req.params.id);
-    if(!singleUsers){
-      return res.status(404).json({message:"User Not Found"});
-
-    }res.status(200).json(singleUsers);
-    
+    const singleUsers = await User.findById(req.params.id);
+    if (!singleUsers) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+    res.status(200).json(singleUsers);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+};
